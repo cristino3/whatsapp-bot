@@ -6,7 +6,7 @@ const app = express();
 
 console.log("🚀 Bot pornit...");
 
-// 🌐 WEB SERVER (pentru Render)
+// 🌐 WEB SERVER (Render wake-up)
 app.get('/', (req, res) => {
     res.send("Bot activ");
 });
@@ -48,7 +48,6 @@ const GROUPS = [
 
 let cachedChats = [];
 
-// 🔧 normalize
 function normalize(text) {
     return text
         .toLowerCase()
@@ -56,7 +55,6 @@ function normalize(text) {
         .replace(/[\u0300-\u036f]/g, "");
 }
 
-// 🔧 parse number
 function parseNumber(str) {
     if (str.includes(",")) {
         return parseFloat(str.replace(/\./g, "").replace(",", "."));
@@ -91,7 +89,7 @@ client.on('ready', async () => {
 client.on('message_create', async msg => {
 
     if (!msg.fromMe) return;
-    if (msg.body.toLowerCase() !== "raport") return;
+    if (!msg.body || msg.body.toLowerCase() !== "raport") return;
 
     console.log("📊 Generez raport...");
 
@@ -109,8 +107,6 @@ client.on('message_create', async msg => {
         }
 
         let messages = await chat.fetchMessages({ limit: 40 });
-
-        // sortare corectă (ultimul mesaj primul)
         messages.sort((a, b) => b.timestamp - a.timestamp);
 
         let found = null;
@@ -128,7 +124,6 @@ client.on('message_create', async msg => {
 
                 if (norm.includes("total") && norm.includes("vanz")) {
 
-                    // ignorăm totaluri greșite
                     if (
                         norm.includes("discount") ||
                         norm.includes("kg") ||
@@ -142,7 +137,6 @@ client.on('message_create', async msg => {
 
                         const number = parseNumber(match[1]);
 
-                        // în mii fără rotunjire
                         const val = number / 1000;
                         found = Math.floor(val * 10) / 10;
 
@@ -158,7 +152,6 @@ client.on('message_create', async msg => {
     }
 
     console.log(report);
-
     await msg.reply(report);
 });
 
