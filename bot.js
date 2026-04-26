@@ -6,7 +6,7 @@ const app = express();
 
 console.log("🚀 Bot pornit...");
 
-// 🌐 WEB SERVER (Render wake-up)
+// 🌐 Web server
 app.get('/', (req, res) => {
     res.send("Bot activ");
 });
@@ -15,11 +15,14 @@ app.listen(process.env.PORT || 3000, () => {
     console.log("🌐 Web server pornit");
 });
 
-// 🤖 WHATSAPP CLIENT
+// 🔥 IMPORTANT: Puppeteer path
+const puppeteer = require('puppeteer');
+
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
+        executablePath: puppeteer.executablePath(),
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -49,10 +52,7 @@ const GROUPS = [
 let cachedChats = [];
 
 function normalize(text) {
-    return text
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+    return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function parseNumber(str) {
@@ -72,26 +72,23 @@ function parseNumber(str) {
     return parseFloat(str);
 }
 
-// 📱 QR
+// QR
 client.on('qr', qr => {
     console.log("📱 SCANEAZĂ QR:");
     qrcode.generate(qr, { small: true });
 });
 
-// ✅ READY
 client.on('ready', async () => {
     console.log("✅ Bot conectat!");
     cachedChats = await client.getChats();
-    console.log("Scrie 'raport'");
 });
 
-// 🔥 RAPORT
 client.on('message_create', async msg => {
 
     if (!msg.fromMe) return;
     if (!msg.body || msg.body.toLowerCase() !== "raport") return;
 
-    console.log("📊 Generez raport...");
+    console.log("📊 Raport...");
 
     let report = "";
 
@@ -134,12 +131,9 @@ client.on('message_create', async msg => {
                     const match = l.match(/(\d[\d.,]*)/);
 
                     if (match) {
-
                         const number = parseNumber(match[1]);
-
                         const val = number / 1000;
                         found = Math.floor(val * 10) / 10;
-
                         break;
                     }
                 }
