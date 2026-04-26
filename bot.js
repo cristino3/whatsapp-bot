@@ -4,11 +4,11 @@ const express = require('express');
 
 const app = express();
 
-console.log("🚀 Bot FINAL pornit...");
+console.log("🚀 Bot pornit...");
 
-// 🌐 WEB SERVER (pt Render + wake-up)
+// 🌐 WEB SERVER (pentru Render)
 app.get('/', (req, res) => {
-    res.send("✅ Bot WhatsApp activ");
+    res.send("Bot activ");
 });
 
 app.listen(process.env.PORT || 3000, () => {
@@ -19,14 +19,15 @@ app.listen(process.env.PORT || 3000, () => {
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-    headless: true,
-    args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu'
-    ]
-}
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu'
+        ]
+    }
+});
 
 const GROUPS = [
     "Mihai Bravu",
@@ -47,7 +48,7 @@ const GROUPS = [
 
 let cachedChats = [];
 
-// 🔧 normalize text
+// 🔧 normalize
 function normalize(text) {
     return text
         .toLowerCase()
@@ -55,9 +56,8 @@ function normalize(text) {
         .replace(/[\u0300-\u036f]/g, "");
 }
 
-// 🔧 parse număr corect
+// 🔧 parse number
 function parseNumber(str) {
-
     if (str.includes(",")) {
         return parseFloat(str.replace(/\./g, "").replace(",", "."));
     }
@@ -84,22 +84,20 @@ client.on('qr', qr => {
 client.on('ready', async () => {
     console.log("✅ Bot conectat!");
     cachedChats = await client.getChats();
-    console.log("🚀 GATA! Scrie 'raport'");
+    console.log("Scrie 'raport'");
 });
 
-// 🔥 COMANDA RAPORT
+// 🔥 RAPORT
 client.on('message_create', async msg => {
 
     if (!msg.fromMe) return;
     if (msg.body.toLowerCase() !== "raport") return;
 
-    console.log("\n📊 Pornesc raportul...\n");
+    console.log("📊 Generez raport...");
 
     let report = "";
 
     for (let groupName of GROUPS) {
-
-        console.log(`🔎 ${groupName}`);
 
         const chat = cachedChats.find(c =>
             c.isGroup && normalize(c.name).includes(normalize(groupName))
@@ -112,14 +110,13 @@ client.on('message_create', async msg => {
 
         let messages = await chat.fetchMessages({ limit: 40 });
 
-        // 🔥 SORTARE CORECTĂ (cel mai recent primul)
+        // sortare corectă (ultimul mesaj primul)
         messages.sort((a, b) => b.timestamp - a.timestamp);
 
         let found = null;
 
         for (let m of messages) {
 
-            // 🔥 text + caption (pt poze)
             let content = m.body || m.caption;
             if (!content) continue;
 
@@ -129,18 +126,14 @@ client.on('message_create', async msg => {
 
                 const norm = normalize(l);
 
-                if (
-                    norm.includes("total") &&
-                    norm.includes("vanz")
-                ) {
+                if (norm.includes("total") && norm.includes("vanz")) {
 
-                    // ignoră totaluri greșite
+                    // ignorăm totaluri greșite
                     if (
                         norm.includes("discount") ||
                         norm.includes("kg") ||
                         norm.includes("seif") ||
-                        norm.includes("procent") ||
-                        norm.includes("21")
+                        norm.includes("procent")
                     ) continue;
 
                     const match = l.match(/(\d[\d.,]*)/);
@@ -149,11 +142,10 @@ client.on('message_create', async msg => {
 
                         const number = parseNumber(match[1]);
 
-                        // 🔥 în mii, fără rotunjire
+                        // în mii fără rotunjire
                         const val = number / 1000;
                         found = Math.floor(val * 10) / 10;
 
-                        console.log(`💰 ${groupName}: ${found}`);
                         break;
                     }
                 }
@@ -165,7 +157,6 @@ client.on('message_create', async msg => {
         report += `${groupName} -${found || "NU"}\n`;
     }
 
-    console.log("\n📤 TRIMIT:\n");
     console.log(report);
 
     await msg.reply(report);
